@@ -1,0 +1,450 @@
+<title>Macro &amp; Markets Live</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a market tape. Status bar, live quote board, macro board, then four charts in a two-up grid. */
+:root{
+  --bg:#F3F5F6; --panel:#FFFFFF; --ink:#13202B; --muted:#5B6976; --line:#DCE2E7; --grid:#E9EDF0;
+  --accent:#1F5FA8; --up:#17784A; --down:#BF3A2D; --flash:#FFF3C4;
+  --s1:#1F5FA8; --s2:#C77B12; --s3:#7A8794;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E151C; --panel:#151F29; --ink:#E3EAF0; --muted:#93A1AE; --line:#26333F; --grid:#1D2833;
+  --accent:#71A9EA; --up:#4CC38A; --down:#F07B6E; --flash:#3B3417;
+  --s1:#71A9EA; --s2:#E8A74A; --s3:#7D8B98; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E151C; --panel:#151F29; --ink:#E3EAF0; --muted:#93A1AE; --line:#26333F; --grid:#1D2833;
+  --accent:#71A9EA; --up:#4CC38A; --down:#F07B6E; --flash:#3B3417;
+  --s1:#71A9EA; --s2:#E8A74A; --s3:#7D8B98; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
+.wrap{max-width:1240px;margin-inline:auto;padding-block:20px 40px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-display);font-weight:600;font-size:28px;letter-spacing:.01em;margin:0;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;border-bottom:2px solid var(--ink);padding-bottom:12px}
+header p{margin:4px 0 0;color:var(--muted);max-width:62ch}
+.status{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;font-size:13px}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel);white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.pill.live .dot{background:var(--up)}
+.pill.warn .dot{background:var(--down)}
+@media (prefers-reduced-motion:no-preference){.pill.live .dot{animation:pulse 2s ease-out infinite}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--up) 60%,transparent)}100%{box-shadow:0 0 0 7px transparent}}
+button{font:inherit;font-size:13px;color:var(--accent);background:transparent;border:1px solid var(--accent);border-radius:6px;padding:4px 10px;cursor:pointer}
+button:hover{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.notice{border:1px solid var(--line);border-left:4px solid var(--down);background:var(--panel);padding:12px 14px;border-radius:6px}
+.notice p{margin:0 0 8px}.notice p:last-child{margin:0}
+section{display:flex;flex-direction:column;gap:10px}
+.sec-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 16px}
+.sec-head span{font-size:12px;color:var(--muted)}
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,178px),1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.tile{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0;transition:background-color .9s}
+.tile.flash{background:var(--flash);transition:none}
+.tile .lbl{font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .grp{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.tile .val{font-family:var(--f-num);font-size:22px;font-weight:500;line-height:1.2;margin-top:4px}
+.tile .val small{font-size:13px;color:var(--muted);margin-left:2px}
+.tile .chg{font-family:var(--f-num);font-size:12.5px}
+.tile .meta{font-size:11px;color:var(--muted);margin-top:2px}
+.up{color:var(--up)}.down{color:var(--down)}.flat{color:var(--muted)}
+.chgs{display:grid;grid-template-columns:auto 1fr;gap:0 8px;font-family:var(--f-num);font-size:12px;margin-top:4px}
+.chgs dt{color:var(--muted)}.chgs dd{margin:0;text-align:right}
+.skel{color:transparent!important;background:var(--grid);border-radius:4px}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,480px),1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.card h3{margin:0;font-family:var(--f-display);font-weight:600;font-size:16px}
+.card .note{margin:0;font-size:12px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.chart{position:relative;min-height:240px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{fill:var(--muted);font-family:var(--f-num);font-size:11px}
+.chart .gridline{stroke:var(--grid)}
+.tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--line);border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.12);padding:6px 9px;font-size:12px;white-space:nowrap;z-index:2}
+.tip b{display:block;font-weight:500;color:var(--muted);font-size:11px}
+.empty{display:flex;align-items:center;justify-content:center;min-height:240px;color:var(--muted);font-size:12px}
+footer{border-top:1px solid var(--line);padding-top:12px;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+footer p{margin:0;max-width:90ch}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Macro &amp; Markets Live</h1>
+      <p id="takeaway">Market quotes recheck every 2 minutes while this page is open. Rates, inflation and jobs data update after each official release.</p>
+    </div>
+    <div class="status">
+      <span class="pill" id="livePill"><span class="dot"></span><span id="liveText">Connecting…</span></span>
+      <span class="pill" id="mktPill"><span class="dot"></span><span id="mktText">US stocks</span></span>
+      <span id="countdown" class="num" style="color:var(--muted)"></span>
+      <button id="refreshBtn" type="button">Check now</button>
+    </div>
+  </header>
+
+  <div class="notice" id="notice" hidden></div>
+
+  <section id="quotes">
+    <div class="sec-head"><h2>Live quotes</h2><span id="quotesMeta">Google Finance, delayed up to 20 minutes</span></div>
+    <div class="board" id="quoteBoard"></div>
+  </section>
+
+  <section id="macro">
+    <div class="sec-head"><h2>Rates &amp; economy</h2><span id="macroMeta">Official daily and monthly releases</span></div>
+    <div class="board" id="macroBoard"></div>
+  </section>
+
+  <section id="charts">
+    <div class="sec-head"><h2>Trends</h2><span id="histMeta"></span></div>
+    <div class="charts">
+      <div class="card" id="c-spx"><h3>S&amp;P 500</h3><p class="note">Daily close, last 13 months</p><div class="chart" id="ch-spx"></div></div>
+      <div class="card" id="c-rates"><h3>Treasury yields and the Fed</h3><div class="legend" id="lg-rates"></div><div class="chart" id="ch-rates"></div></div>
+      <div class="card" id="c-curve"><h3>Treasury yield curve</h3><div class="legend" id="lg-curve"></div><div class="chart" id="ch-curve"></div></div>
+      <div class="card" id="c-econ"><h3>Inflation and unemployment</h3><div class="legend" id="lg-econ"></div><div class="chart" id="ch-econ"></div></div>
+    </div>
+  </section>
+
+  <footer>
+    <p id="pipelineMeta">Daily data pipeline: —</p>
+    <p>Quotes: Google Finance through Google Sheets. Rates and economy: U.S. Treasury, Federal Reserve Bank of New York, Bureau of Labor Statistics, Cboe, EIA and the European Central Bank, collected twice each weekday by a GitHub Actions job (martinogie/macro-markets-dashboard). Gold and oil are shown through the GLD and USO exchange-traded funds. Not investment advice.</p>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+(function(){
+const SHEET = "1nP7JotJbMWplyGy4Yjtp-g3YAwsPa-JlGmAKmHzkn7Q";
+const SERVER = "Google Sheets", TOOL = "get_values";
+const FAST = 120000, SLOW = 1800000;
+const $ = (id) => document.getElementById(id);
+const state = { live:null, kpis:null, curve:null, hist:null, refreshed:null, lastLive:0, errors:{} };
+
+/* ---------- helpers ---------- */
+const toRows = (payload) => {
+  const v = payload && payload.values;
+  if (!Array.isArray(v) || v.length < 1) return [];
+  const head = v[0];
+  return v.slice(1).map(r => Object.fromEntries(head.map((h,i) => [h, r[i] ?? ""])));
+};
+const num = (x) => { if (x === "" || x == null) return null; const n = Number(x); return Number.isFinite(n) ? n : null; };
+const fmt = (n, d) => n == null ? "—" : n.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+const signed = (n, d, suffix="") => n == null ? "" : (n > 0 ? "+" : n < 0 ? "−" : "±") + fmt(Math.abs(n), d) + suffix;
+const dir = (n, goodUp=true) => n == null || Math.abs(n) < 1e-9 ? "flat" : ((n > 0) === goodUp ? "up" : "down");
+const arrow = (n) => n == null || Math.abs(n) < 1e-9 ? "" : n > 0 ? "▲ " : "▼ ";
+const clock = (ms) => new Date(ms).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",second:"2-digit",timeZone:"America/Chicago"});
+const parseDay = d3.utcParse("%Y-%m-%d");
+function el(tag, cls, text){ const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+/* ---------- live quote board ---------- */
+const QUOTE_ORDER = ["SP500","DJI","NASDAQ","VIX","TNX","IRX","EURUSD","USDJPY","BTC","GLD","USO"];
+const QUOTE_FMT = {
+  SP500:{d:2}, DJI:{d:2}, NASDAQ:{d:2}, VIX:{d:2},
+  TNX:{d:3, scale:.1, unit:"%", bp:true}, IRX:{d:3, scale:.1, unit:"%", bp:true},
+  EURUSD:{d:4}, USDJPY:{d:2}, BTC:{d:0, pre:"$"}, GLD:{d:2, pre:"$"}, USO:{d:2, pre:"$"}
+};
+const prevPrice = {};
+function drawQuotes(){
+  const board = $("quoteBoard");
+  const rows = state.live ? state.live.filter(r => r.id && r.id[0] !== "_") : null;
+  const byId = rows ? Object.fromEntries(rows.map(r => [r.id, r])) : {};
+  board.replaceChildren(...QUOTE_ORDER.map(id => {
+    const r = byId[id], f = QUOTE_FMT[id] || {d:2};
+    const t = el("div","tile"); t.id = "q-" + id;
+    t.append(el("div","grp", r ? r.group : " "), el("div","lbl", r ? r.name : id));
+    const price = r ? num(r.price) : null, chg = r ? num(r.change) : null, pct = r ? num(r.change_pct) : null;
+    const v = el("div","val");
+    if (price == null){ v.textContent = "—"; if (!state.live) v.classList.add("skel"); }
+    else { v.textContent = (f.pre||"") + fmt(price*(f.scale||1), f.d); if (f.unit) v.append(el("small",null,f.unit)); }
+    t.append(v);
+    let chgText = "";
+    if (chg != null){
+      chgText = f.bp ? arrow(chg) + signed(chg*10, 1, " bp") : arrow(chg) + signed(chg*(f.scale||1), f.d) + (pct != null ? "  (" + signed(pct,2,"%") + ")" : "");
+    }
+    t.append(el("div","chg " + dir(chg, id !== "VIX"), chgText || " "));
+    t.append(el("div","meta", r && r.trade_time ? "Last trade " + r.trade_time : " "));
+    if (price != null && prevPrice[id] != null && prevPrice[id] !== price){
+      t.classList.add("flash"); requestAnimationFrame(() => requestAnimationFrame(() => t.classList.remove("flash")));
+    }
+    if (price != null) prevPrice[id] = price;
+    return t;
+  }));
+  const sheetRow = state.live && state.live.find(r => r.id === "_sheet_time");
+  $("quotesMeta").textContent = "Google Finance, delayed up to 20 minutes" + (sheetRow && sheetRow.price ? " · Sheet recalculated " + sheetRow.price + " CT" : "");
+}
+
+/* ---------- macro board ---------- */
+const KPI_ORDER = ["UST3M","UST2Y","UST10Y","UST30Y","SPREAD_10Y2Y","FEDFUNDS","CPI_YOY","UNRATE","SP500","VIX","WTI","EURUSD"];
+function kpiVal(r){
+  const v = num(r.value); if (v == null) return "—";
+  if (r.unit === "%") return fmt(v, 2) + "%";
+  if (r.unit === "pp") return signed(v, 2, " pp");
+  if (r.unit === "$/bbl") return "$" + fmt(v, 2);
+  if (r.unit === "$") return "$" + fmt(v, 4);
+  return fmt(v, 2);
+}
+function kpiChg(r, key){
+  const c = num(r[key]); if (c == null) return {t:"—", c:"flat"};
+  const rate = r.unit === "%" || r.unit === "pp";
+  const t = rate ? signed(c*100, 0, " bp") : signed(c, r.unit === "$" ? 4 : 2);
+  const goodUp = !(["VIX","CPI_YOY","UNRATE"].includes(r.series_id));
+  return {t, c: rate ? "flat" : dir(c, goodUp)};
+}
+function drawMacro(){
+  const board = $("macroBoard");
+  const byId = state.kpis ? Object.fromEntries(state.kpis.map(r => [r.series_id, r])) : {};
+  board.replaceChildren(...KPI_ORDER.map(id => {
+    const r = byId[id];
+    const t = el("div","tile"); t.id = "k-" + id;
+    t.append(el("div","grp", r ? r.category : " "), el("div","lbl", r ? r.series : id));
+    const v = el("div","val", r ? kpiVal(r) : "—"); if (!r && !state.kpis) v.classList.add("skel");
+    t.append(v);
+    const dl = el("dl","chgs");
+    const monthly = r && (id === "CPI_YOY" || id === "UNRATE");
+    (monthly ? [["1 mo","chg_1m"],["1 yr","chg_1y"]] : [["1 day","chg_1d"],["1 mo","chg_1m"],["1 yr","chg_1y"]]).forEach(([lab,key]) => {
+      const c = r ? kpiChg(r,key) : {t:"", c:"flat"};
+      dl.append(el("dt",null,lab), el("dd",c.c,c.t));
+    });
+    t.append(dl, el("div","meta", r ? "As of " + r.as_of : " "));
+    return t;
+  }));
+}
+
+/* ---------- charts ---------- */
+const tipFor = (box) => { let t = box.querySelector(".tip"); if (!t){ t = el("div","tip"); t.hidden = true; box.append(t); } return t; };
+function legend(id, items){ $(id).replaceChildren(...items.map(([name,color]) => { const s = el("span"); const i = el("i"); i.style.background = color; s.append(i, document.createTextNode(name)); return s; })); }
+function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+function lineChart(boxId, series, opt){
+  const box = $(boxId);
+  const all = series.flatMap(s => s.points);
+  if (!all.length){ box.replaceChildren(el("div","empty", state.errors.hist ? "Couldn't load this chart" : "")); if (!state.errors.hist) box.firstChild.classList.add("skel"); return; }
+  const W = Math.max(280, box.clientWidth || 480), H = 240, m = {t:10, r:14, b:24, l:0};
+  const x = d3.scaleUtc(d3.extent(all, d => d.x), [0, 1]);
+  const [lo, hi] = d3.extent(all, d => d.y); const pad = (hi - lo) * .08 || 1;
+  const y = d3.scaleLinear([opt.zero ? Math.min(0, lo) : lo - pad, hi + pad], [H - m.b, m.t]).nice();
+  const yt = y.ticks(5), ytf = opt.yfmt;
+  const svg = d3.create("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("width","100%").attr("role","img").attr("aria-label", opt.label);
+  const probe = svg.append("text").text(ytf(yt[yt.length-1])); document.body.append(svg.node());
+  m.l = Math.ceil(Math.max(...yt.map(t => { probe.text(ytf(t)); return probe.node().getComputedTextLength(); }))) + 10; probe.remove(); svg.node().remove();
+  x.range([m.l, W - m.r]);
+  svg.append("g").selectAll("line").data(yt).join("line").attr("class","gridline").attr("x1",m.l).attr("x2",W-m.r).attr("y1",d=>y(d)).attr("y2",d=>y(d));
+  svg.append("g").selectAll("text").data(yt).join("text").attr("x", m.l - 8).attr("y", d => y(d)).attr("dy","0.32em").attr("text-anchor","end").text(ytf);
+  const xt = x.ticks(Math.max(2, Math.floor((W - m.l) / 90)));
+  svg.append("g").selectAll("text").data(xt).join("text").attr("x", d => x(d)).attr("y", H - 6).attr("text-anchor","middle").text(opt.xfmt);
+  if (opt.zero && y.domain()[0] < 0) svg.append("line").attr("x1",m.l).attr("x2",W-m.r).attr("y1",y(0)).attr("y2",y(0)).attr("stroke",cssVar("--muted")).attr("stroke-dasharray","3 3");
+  const line = d3.line().x(d => x(d.x)).y(d => y(d.y));
+  series.forEach(s => {
+    if (s.area){
+      const gid = boxId + "-g"; const g = svg.append("defs").append("linearGradient").attr("id",gid).attr("x1",0).attr("x2",0).attr("y1",0).attr("y2",1);
+      [[0,.22],[.5,.07],[1,0]].forEach(([o,a]) => g.append("stop").attr("offset",o).attr("stop-color",s.color).attr("stop-opacity",a));
+      svg.append("path").datum(s.points).attr("fill",`url(#${gid})`).attr("d", d3.area().x(d=>x(d.x)).y0(H-m.b).y1(d=>y(d.y)));
+    }
+    svg.append("path").datum(s.points).attr("fill","none").attr("stroke",s.color).attr("stroke-width",2).attr("stroke-linejoin","round").attr("stroke-linecap","round").attr("d", line);
+    const last = s.points[s.points.length-1];
+    if (last) svg.append("circle").attr("cx",x(last.x)).attr("cy",y(last.y)).attr("r",3.5).attr("fill",s.color);
+  });
+  const rule = svg.append("line").attr("y1",m.t).attr("y2",H-m.b).attr("stroke",cssVar("--muted")).attr("stroke-width",1).attr("opacity",0);
+  const dots = series.map(s => svg.append("circle").attr("r",4).attr("fill",s.color).attr("stroke",cssVar("--panel")).attr("stroke-width",2).attr("opacity",0));
+  const tip = tipFor(box);
+  const bis = d3.bisector(d => d.x).center;
+  svg.append("rect").attr("x",m.l).attr("y",m.t).attr("width",W-m.l-m.r).attr("height",H-m.t-m.b).attr("fill","transparent")
+    .on("pointermove", (ev) => {
+      const [px] = d3.pointer(ev); const xd = x.invert(px);
+      tip.replaceChildren(el("b",null, opt.tipDate(xd)));
+      series.forEach((s,i) => {
+        const p = s.points[bis(s.points, xd)]; if (!p) return;
+        dots[i].attr("cx",x(p.x)).attr("cy",y(p.y)).attr("opacity",1);
+        const line = el("div"); const sw = el("i"); sw.style.cssText = `display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;background:${s.color}`;
+        line.append(sw, document.createTextNode(s.name + "  "), el("span","num", opt.vfmt(p.y)));
+        if (opt.tipShowDate) line.append(el("span",null,"  " + d3.utcFormat("%b %-d, %Y")(p.x)));
+        tip.append(line);
+      });
+      rule.attr("x1",px).attr("x2",px).attr("opacity",.5);
+      tip.hidden = false;
+      const bw = box.clientWidth, tw = tip.offsetWidth, sx = px * bw / W;
+      tip.style.left = Math.min(Math.max(0, sx + 12), bw - tw) + "px"; tip.style.top = "8px";
+    })
+    .on("pointerleave", () => { tip.hidden = true; rule.attr("opacity",0); dots.forEach(d => d.attr("opacity",0)); });
+  box.replaceChildren(svg.node(), tip);
+}
+
+function curveChart(){
+  const box = $("ch-curve");
+  const rows = state.curve || [];
+  if (!rows.length){ box.replaceChildren(el("div","empty skel")); return; }
+  const snaps = ["1 year ago","1 month ago","Today"];
+  const colors = {"Today":cssVar("--s1"), "1 month ago":cssVar("--s2"), "1 year ago":cssVar("--s3")};
+  const asOf = Object.fromEntries(rows.map(r => [r.snapshot, r.as_of]));
+  legend("lg-curve", snaps.slice().reverse().map(s => [s + (asOf[s] ? " (" + asOf[s] + ")" : ""), colors[s]]));
+  const tenors = [...new Map(rows.map(r => [r.tenor, num(r.years)])).entries()].sort((a,b) => a[1]-b[1]);
+  const W = Math.max(280, box.clientWidth || 480), H = 240, m = {t:10, r:14, b:24, l:44};
+  const x = d3.scalePoint(tenors.map(t => t[0]), [m.l, W - m.r]).padding(.3);
+  const ys = rows.map(r => num(r.yield)).filter(v => v != null);
+  const y = d3.scaleLinear([d3.min(ys) - .2, d3.max(ys) + .2], [H - m.b, m.t]).nice();
+  const svg = d3.create("svg").attr("viewBox",`0 0 ${W} ${H}`).attr("width","100%").attr("role","img").attr("aria-label","Treasury yield curve");
+  const yt = y.ticks(5);
+  svg.append("g").selectAll("line").data(yt).join("line").attr("class","gridline").attr("x1",m.l).attr("x2",W-m.r).attr("y1",d=>y(d)).attr("y2",d=>y(d));
+  svg.append("g").selectAll("text").data(yt).join("text").attr("x",m.l-8).attr("y",d=>y(d)).attr("dy","0.32em").attr("text-anchor","end").text(d => d.toFixed(1) + "%");
+  const lab = (t) => /MO$/.test(t) ? t.replace("MO","m") : t + "y";
+  const every = W < 420 ? 2 : 1;
+  svg.append("g").selectAll("text").data(tenors.filter((_,i) => i % every === 0)).join("text").attr("x",d=>x(d[0])).attr("y",H-6).attr("text-anchor","middle").text(d => lab(d[0]));
+  snaps.forEach(s => {
+    const pts = tenors.map(([t]) => { const r = rows.find(r => r.snapshot === s && r.tenor === t); return r ? {t, y:num(r.yield)} : null; }).filter(p => p && p.y != null);
+    svg.append("path").datum(pts).attr("fill","none").attr("stroke",colors[s]).attr("stroke-width", s === "Today" ? 2.5 : 1.75).attr("stroke-linejoin","round").attr("stroke-linecap","round")
+      .attr("stroke-dasharray", s === "1 year ago" ? "4 3" : null).attr("d", d3.line().x(d => x(d.t)).y(d => y(d.y)));
+    svg.append("g").selectAll("circle").data(pts).join("circle").attr("cx",d=>x(d.t)).attr("cy",d=>y(d.y)).attr("r", s === "Today" ? 3 : 2).attr("fill",colors[s]);
+  });
+  const tip = tipFor(box);
+  const step = x.step();
+  svg.append("g").selectAll("rect").data(tenors).join("rect").attr("x",d=>x(d[0])-step/2).attr("y",m.t).attr("width",step).attr("height",H-m.t-m.b).attr("fill","transparent")
+    .on("pointerenter", (ev, d) => {
+      tip.replaceChildren(el("b",null, lab(d[0]) + " Treasury"));
+      snaps.slice().reverse().forEach(s => { const r = rows.find(r => r.snapshot === s && r.tenor === d[0]); if (!r) return;
+        const line = el("div"); const sw = el("i"); sw.style.cssText = `display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;background:${colors[s]}`;
+        line.append(sw, document.createTextNode(s + "  "), el("span","num", fmt(num(r.yield),2) + "%")); tip.append(line); });
+      tip.hidden = false;
+      const bw = box.clientWidth, sx = x(d[0]) * bw / W;
+      tip.style.left = Math.min(Math.max(0, sx + 12), bw - tip.offsetWidth) + "px"; tip.style.top = "8px";
+    })
+    .on("pointerleave", () => { tip.hidden = true; });
+  box.replaceChildren(svg.node(), tip);
+}
+
+function drawCharts(){
+  const h = state.hist || [];
+  const pick = (id) => h.filter(r => r.series_id === id).map(r => ({x: parseDay(r.date), y: num(r.value)})).filter(p => p.x && p.y != null).sort((a,b) => a.x - b.x);
+  const yearAgo = d3.utcDay.offset(new Date(), -395);
+  const recent = (pts) => pts.filter(p => p.x >= yearAgo);
+  const c1 = cssVar("--s1"), c2 = cssVar("--s2"), c3 = cssVar("--s3");
+  lineChart("ch-spx", [{name:"S&P 500", color:c1, area:true, points: recent(pick("SP500"))}],
+    {label:"S&P 500 daily close", yfmt: d => d3.format(",.0f")(d), xfmt: d3.utcFormat("%b %y"), vfmt: d => fmt(d,2), tipDate: d3.utcFormat("%b %-d, %Y")});
+  legend("lg-rates", [["10-year Treasury",c1],["2-year Treasury",c2],["Fed funds (effective)",c3]]);
+  lineChart("ch-rates", [
+    {name:"10-year", color:c1, points: recent(pick("UST10Y"))},
+    {name:"2-year", color:c2, points: recent(pick("UST2Y"))},
+    {name:"Fed funds", color:c3, points: recent(pick("FEDFUNDS"))}],
+    {label:"Treasury yields and fed funds rate", yfmt: d => d.toFixed(1) + "%", xfmt: d3.utcFormat("%b %y"), vfmt: d => fmt(d,2) + "%", tipDate: d3.utcFormat("%b %-d, %Y")});
+  legend("lg-econ", [["CPI inflation, year over year",c1],["Unemployment rate",c2]]);
+  lineChart("ch-econ", [
+    {name:"CPI inflation", color:c1, points: pick("CPI_YOY")},
+    {name:"Unemployment", color:c2, points: pick("UNRATE")}],
+    {label:"CPI inflation and unemployment, monthly", yfmt: d => d.toFixed(0) + "%", xfmt: d3.utcFormat("%Y"), vfmt: d => fmt(d,1) + "%", tipDate: d3.utcFormat("%B %Y"), zero:true});
+  curveChart();
+  const last = h.length ? d3.max(h.filter(r => r.series_id === "SP500"), r => r.date) : null;
+  $("histMeta").textContent = last ? "Daily series through " + last : "";
+}
+
+/* ---------- headline + status ---------- */
+function drawTakeaway(){
+  if (!state.kpis) return;
+  const k = Object.fromEntries(state.kpis.map(r => [r.series_id, r]));
+  const parts = [];
+  const spr = k.SPREAD_10Y2Y && num(k.SPREAD_10Y2Y.value);
+  if (spr != null) parts.push(spr >= 0 ? `The yield curve is upward sloping: the 10-year yields ${fmt(spr*100,0)} bp more than the 2-year` : `The yield curve is inverted: the 2-year yields ${fmt(-spr*100,0)} bp more than the 10-year`);
+  const cpi = k.CPI_YOY && num(k.CPI_YOY.value), ff = k.FEDFUNDS && num(k.FEDFUNDS.value);
+  if (cpi != null && ff != null) parts.push(`inflation is ${fmt(cpi,1)}% against a ${fmt(ff,2)}% fed funds rate`);
+  if (parts.length) $("takeaway").textContent = parts.join(", and ") + ". Market quotes recheck every 2 minutes while this page is open.";
+}
+function drawPipeline(){
+  const r = state.refreshed && state.refreshed[0];
+  if (!r) return;
+  $("pipelineMeta").textContent = `Daily data pipeline: last run ${r.refreshed_utc} UTC · latest market date ${r.latest_market_date} · ${Number(r.rows).toLocaleString("en-US")} rows` + (r.failed_sources ? ` · sources that failed: ${r.failed_sources}` : " · all sources OK");
+}
+function marketStatus(){
+  const now = new Date();
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:"America/Chicago",weekday:"short",hour:"numeric",minute:"numeric",hour12:false}).formatToParts(now).map(p => [p.type,p.value]));
+  const mins = (Number(parts.hour) % 24) * 60 + Number(parts.minute);
+  const open = !["Sat","Sun"].includes(parts.weekday) && mins >= 510 && mins < 900;
+  $("mktPill").className = "pill" + (open ? " live" : "");
+  $("mktText").textContent = open ? "US stocks: open" : "US stocks: closed";
+  $("mktPill").title = "Regular session 8:30 am to 3:00 pm Central, weekdays (holidays not shown)";
+}
+function tick(){
+  marketStatus();
+  if (state.lastLive){
+    const left = Math.max(0, FAST - (Date.now() - state.lastLive));
+    const s = Math.ceil(left/1000);
+    $("countdown").textContent = left > 0 ? `Next check in ${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}` : "Checking…";
+  }
+}
+setInterval(tick, 1000); tick();
+
+function showNotice(lines, action){
+  const n = $("notice");
+  if (!lines){ n.hidden = true; n.replaceChildren(); return; }
+  n.replaceChildren(...lines.map(t => el("p",null,t)));
+  if (action){ const p = el("p"); const b = el("button",null,action.label); b.type = "button"; b.addEventListener("click", action.run); p.append(b); n.append(p); }
+  n.hidden = false;
+}
+function setLive(ok, text){ $("livePill").className = "pill " + (ok ? "live" : "warn"); $("liveText").textContent = text; }
+
+/* ---------- data ---------- */
+const AUTHZ = ["needs_reauth","server_not_connected","blocked_by_policy","not_in_manifest","selection_required","approval_required","not_granted","capability_disabled","capability_removed","consent_required","user_changed"];
+function explain(code, message){
+  switch(code){
+    case "server_not_connected": return ["Live data comes from your Google Sheets connection, which isn't added for this account.", "Add Google Sheets in claude.ai Settings → Connectors, then reload this page."];
+    case "needs_reauth": return ["Your Google Sheets connection has expired.", "Reconnect Google Sheets in claude.ai Settings → Connectors, then reload this page."];
+    case "selection_required": return ["You have more than one Google Sheets connection. Choose one when Claude asks, then reload this page."];
+    case "not_in_manifest": case "approval_required": case "consent_required": return ["This page needs your permission to read the Macro & Markets Live Data sheet through Google Sheets."];
+    case "blocked_by_policy": return ["Your organization's policy blocks Google Sheets for this page."];
+    case "tool_error": return ["Google Sheets answered but couldn't read the data sheet. You may not have access to it.", message ? "Google said: " + message : ""].filter(Boolean);
+    default: return null;
+  }
+}
+let mcpRef = null;
+function handle(key, ev, draw, rowsOf = toRows){
+  if (ev.type === "data"){
+    state[key] = rowsOf(ev.result.payload);
+    delete state.errors[key];
+    if (key === "live"){ state.lastLive = ev.result.cache ? ev.result.cache.storedAt : Date.now(); setLive(true, "Live · checked " + clock(state.lastLive)); }
+    if (!Object.keys(state.errors).length) showNotice(null);
+    draw();
+    return;
+  }
+  const e = ev.error || {}; state.errors[key] = e.code || "upstream_error";
+  if (AUTHZ.includes(e.code) || e.code === "tool_error"){
+    if (AUTHZ.includes(e.code)) state[key] = null;
+    draw();
+    const lines = explain(e.code, e.message) || ["Live data isn't available in this view."];
+    const askable = ["not_in_manifest","approval_required","consent_required"].includes(e.code);
+    showNotice(lines, askable ? {label:"Allow Google Sheets", run: allowOnce} : null);
+    setLive(false, "Not connected");
+  } else {
+    setLive(false, "Couldn't reach Google · showing last data");
+  }
+}
+async function allowOnce(){
+  if (!mcpRef) return;
+  try { await mcpRef.callTool(SERVER, TOOL, {spreadsheetId: SHEET, range: "live!A1:H13"}); showNotice(null); mcpRef.invalidate(SERVER, TOOL).catch(() => {}); }
+  catch(e){ showNotice(explain(e.code, e.message) || ["Google Sheets is still not allowed for this page."]); }
+}
+function watch(range, key, every, draw){
+  return mcpRef.watchTool(SERVER, TOOL, {spreadsheetId: SHEET, range}, (ev) => handle(key, ev, draw), {refetchInterval: every, cache: {staleTime: Math.min(every/2, 60000)}});
+}
+
+drawQuotes(); drawMacro(); drawCharts();
+let rz; new ResizeObserver(() => { clearTimeout(rz); rz = setTimeout(drawCharts, 120); }).observe($("charts"));
+
+(async () => {
+  const mcp = window.claude && window.claude.use ? await window.claude.use("mcp") : null;
+  if (!mcp){
+    setLive(false, "Offline");
+    showNotice(["Live data loads only when this page is opened in Claude by someone with Google Sheets connected and access to the data sheet."]);
+    return;
+  }
+  mcpRef = mcp;
+  watch("live!A1:H13", "live", FAST, drawQuotes);
+  watch("kpis!A1:I13", "kpis", FAST, () => { drawMacro(); drawTakeaway(); });
+  watch("refreshed!A1:D2", "refreshed", FAST, drawPipeline);
+  watch("yield_curve!A1:E40", "curve", SLOW, curveChart);
+  watch("history!A1:C6000", "hist", SLOW, drawCharts);
+  $("refreshBtn").addEventListener("click", () => { $("countdown").textContent = "Checking…"; mcp.invalidate(SERVER, TOOL).catch(() => {}); });
+})();
+})();
+</script>

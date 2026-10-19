@@ -41,6 +41,14 @@ Treasury, NY Fed, BLS, Cboe, EIA, ECB ──► GitHub Actions, 8:15am & 6:15pm 
   pulls the CSVs with `IMPORTDATA`, and the Tableau workbook has **Keep this data in sync** turned on, which
   refreshes it once a day.
 
+## Live web view (2-minute refresh)
+
+`web/live.html` is a web dashboard that rechecks market quotes every 2 minutes while it is open.
+The Google Sheet has a `live` tab of `GOOGLEFINANCE` quotes (S&P 500, Dow, Nasdaq, VIX, 10-year and
+13-week Treasury yields, EUR/USD, USD/JPY, Bitcoin, gold and oil ETFs; delayed up to 20 minutes) and a
+`history` tab that trims the daily data for charts. The page reads both through the Google Sheets
+connection in Claude, so it shows data only to someone with access to the sheet.
+
 ## Run the pipeline yourself
 
 ```bash
