@@ -12,6 +12,8 @@ Treasury, NY Fed, BLS, Cboe, EIA, ECB ──► GitHub Actions, 8:15am & 6:15pm 
                          Tableau Public (daily sync)          Power BI (Web connector, Refresh)
 ```
 
+**Tableau Public dashboard:** [Macro & Markets Live](https://public.tableau.com/app/profile/martins.ogiekpolor/viz/MacroMarketsLive/MacroMarketsLive) (syncs with the data daily)
+
 ## What it tracks
 
 | Group | Series | Source |
