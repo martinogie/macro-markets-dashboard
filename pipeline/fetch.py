@@ -5,7 +5,10 @@ Runs every weekday on GitHub Actions (see .github/workflows/refresh.yml). No API
   US Treasury     daily par yield curve (1 month to 30 years)       home.treasury.gov
   New York Fed    effective federal funds rate                       markets.newyorkfed.org
   BLS             CPI (all items, NSA) and unemployment rate         api.bls.gov (public v1 API)
-  Yahoo Finance   S&P 500, VIX, WTI crude futures, euro/dollar       query1.finance.yahoo.com
+  Cboe            S&P 500 and VIX daily closes                       cdn.cboe.com
+  EIA             WTI crude spot price (Cushing)                     eia.gov
+  ECB             euro reference rate (US$ per euro)                 data-api.ecb.europa.eu
+  (Yahoo Finance is a fallback for the four market series.)
 
 Outputs in data/:
   series_long.csv   one row per date and series (daily series from 2019, monthly from 2016)
@@ -33,6 +36,9 @@ TREASURY = ("https://home.treasury.gov/resource-center/data-chart-center/interes
 NYFED = "https://markets.newyorkfed.org/api/rates/unsecured/effr/search.json?startDate={start}&endDate={end}"
 BLS = "https://api.bls.gov/publicAPI/v1/timeseries/data/"
 YAHOO = "https://query1.finance.yahoo.com/v8/finance/chart/{sym}?period1={p1}&period2={p2}&interval=1d"
+CBOE = "https://cdn.cboe.com/api/global/us_indices/daily_prices/{sym}_History.csv"
+ECB = "https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A?format=csvdata&startPeriod={start}"
+EIA = "https://www.eia.gov/dnav/pet/hist_xls/RWTCd.xls"
 
 TENORS = {"1 Mo": ("1MO", 1 / 12), "3 Mo": ("3MO", 0.25), "6 Mo": ("6MO", 0.5), "1 Yr": ("1", 1), "2 Yr": ("2", 2),
           "3 Yr": ("3", 3), "5 Yr": ("5", 5), "7 Yr": ("7", 7), "10 Yr": ("10", 10), "20 Yr": ("20", 20),
@@ -47,7 +53,7 @@ META = {
     "SPREAD_10Y2Y": ("10y minus 2y spread", "Rates", "pp", "D"),
     "SP500": ("S&P 500", "Markets", "index", "D"),
     "VIX": ("VIX volatility", "Markets", "index", "D"),
-    "WTI": ("WTI crude oil (front month)", "Markets", "$/bbl", "D"),
+    "WTI": ("WTI crude oil (spot)", "Markets", "$/bbl", "D"),
     "EURUSD": ("US$ per euro", "Markets", "$", "D"),
     "CPI_YOY": ("CPI inflation (YoY)", "Economy", "%", "M"),
     "UNRATE": ("Unemployment rate", "Economy", "%", "M"),
@@ -108,6 +114,36 @@ def yahoo(symbol):
     return s.dropna().groupby(level=0).last()
 
 
+def cboe(sym):
+    """Cboe daily index history: DATE,OPEN,HIGH,LOW,CLOSE (VIX) or DATE,<SYM> (SPX)."""
+    df = pd.read_csv(io.BytesIO(get(CBOE.format(sym=sym))))
+    df.columns = [c.strip().upper() for c in df.columns]
+    col = "CLOSE" if "CLOSE" in df.columns else df.columns[-1]
+    return pd.Series(pd.to_numeric(df[col], errors="coerce").values, index=pd.to_datetime(df["DATE"])).dropna().sort_index()
+
+
+def ecb_eurusd():
+    df = pd.read_csv(io.BytesIO(get(ECB.format(start=f"{START_YEAR - 1}-01-01"))))
+    return pd.Series(df["OBS_VALUE"].astype(float).values, index=pd.to_datetime(df["TIME_PERIOD"])).sort_index()
+
+
+def eia_wti():
+    df = pd.read_excel(io.BytesIO(get(EIA)), sheet_name="Data 1", skiprows=2)
+    df.columns = ["date", "value"]
+    return pd.Series(pd.to_numeric(df["value"], errors="coerce").values, index=pd.to_datetime(df["date"])).dropna().sort_index()
+
+
+def first_ok(*fns):
+    """Try each source in order; return the first that works."""
+    errors = []
+    for fn in fns:
+        try:
+            return fn()
+        except Exception as e:
+            errors.append(str(e))
+    raise RuntimeError(" | ".join(errors))
+
+
 def change_at(s, last, days):
     prior = s[s.index <= last - pd.Timedelta(days=days)]
     return round(s.iloc[-1] - prior.iloc[-1], 4) if len(prior) else None
@@ -141,8 +177,14 @@ def main():
     if b is not None:
         series["CPI_YOY"], series["UNRATE"] = b
 
-    for sid, sym in (("SP500", "^GSPC"), ("VIX", "^VIX"), ("WTI", "CL=F"), ("EURUSD", "EURUSD=X")):
-        s = attempt(f"{sid} (Yahoo)", lambda sym=sym: yahoo(sym))
+    markets = {
+        "SP500": ("S&P 500 (Cboe)", lambda: first_ok(lambda: cboe("SPX"), lambda: yahoo("^GSPC"))),
+        "VIX": ("VIX (Cboe)", lambda: first_ok(lambda: cboe("VIX"), lambda: yahoo("^VIX"))),
+        "WTI": ("WTI (EIA)", lambda: first_ok(eia_wti, lambda: yahoo("CL=F"))),
+        "EURUSD": ("EUR/USD (ECB)", lambda: first_ok(ecb_eurusd, lambda: yahoo("EURUSD=X"))),
+    }
+    for sid, (label, fn) in markets.items():
+        s = attempt(label, fn)
         if s is not None:
             series[sid] = s
 
