@@ -1,140 +1,186 @@
-"""Pull markets and economy series from FRED and write tidy CSVs for Tableau and Power BI.
+"""Pull markets and economy data from official public sources and write tidy CSVs for Tableau and Power BI.
 
-Runs every weekday on GitHub Actions (see .github/workflows/refresh.yml). No API key needed: it uses
-FRED's public CSV download (fredgraph.csv).
+Runs every weekday on GitHub Actions (see .github/workflows/refresh.yml). No API keys needed:
+
+  US Treasury     daily par yield curve (1 month to 30 years)       home.treasury.gov
+  New York Fed    effective federal funds rate                       markets.newyorkfed.org
+  BLS             CPI (all items, NSA) and unemployment rate         api.bls.gov (public v1 API)
+  Yahoo Finance   S&P 500, VIX, WTI crude futures, euro/dollar       query1.finance.yahoo.com
 
 Outputs in data/:
-  series_long.csv   one row per date and series (daily series from 2019, monthly series from 2015)
+  series_long.csv   one row per date and series (daily series from 2019, monthly from 2016)
   kpis.csv          latest value per series with 1-day, 1-month and 1-year changes
   yield_curve.csv   Treasury curve today, 1 month ago and 1 year ago
-  refreshed.csv     timestamp of the last successful run
+  refreshed.csv     time of the last successful run and any source that failed
 """
 import io
 import json
-import os
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from urllib.request import Request, urlopen
 
 import pandas as pd
 
 OUT = Path(__file__).resolve().parent.parent / "data"
-URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={}&cosd=2014-01-01"
-API = "https://api.stlouisfed.org/fred/series/observations?series_id={}&api_key={}&file_type=json&observation_start=2014-01-01"
-UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-      "Chrome/126.0 Safari/537.36")
+START_YEAR = 2019
+UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"}
+TODAY = date.today()
 
-# id: (name, category, unit, frequency)
-SERIES = {
-    "DFF": ("Fed funds rate", "Rates", "%", "D"),
-    "DGS3MO": ("3-month Treasury", "Rates", "%", "D"),
-    "DGS2": ("2-year Treasury", "Rates", "%", "D"),
-    "DGS10": ("10-year Treasury", "Rates", "%", "D"),
-    "DGS30": ("30-year Treasury", "Rates", "%", "D"),
-    "T10Y2Y": ("10y minus 2y spread", "Rates", "pp", "D"),
-    "MORTGAGE30US": ("30-year mortgage rate", "Rates", "%", "W"),
+TREASURY = ("https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/"
+            "{year}/all?type=daily_treasury_yield_curve&field_tdr_date_value={year}&page&_format=csv")
+NYFED = "https://markets.newyorkfed.org/api/rates/unsecured/effr/search.json?startDate={start}&endDate={end}"
+BLS = "https://api.bls.gov/publicAPI/v1/timeseries/data/"
+YAHOO = "https://query1.finance.yahoo.com/v8/finance/chart/{sym}?period1={p1}&period2={p2}&interval=1d"
+
+TENORS = {"1 Mo": ("1MO", 1 / 12), "3 Mo": ("3MO", 0.25), "6 Mo": ("6MO", 0.5), "1 Yr": ("1", 1), "2 Yr": ("2", 2),
+          "3 Yr": ("3", 3), "5 Yr": ("5", 5), "7 Yr": ("7", 7), "10 Yr": ("10", 10), "20 Yr": ("20", 20),
+          "30 Yr": ("30", 30)}
+# series_id: (name, category, unit, frequency)
+META = {
+    "FEDFUNDS": ("Fed funds rate (effective)", "Rates", "%", "D"),
+    "UST3M": ("3-month Treasury", "Rates", "%", "D"),
+    "UST2Y": ("2-year Treasury", "Rates", "%", "D"),
+    "UST10Y": ("10-year Treasury", "Rates", "%", "D"),
+    "UST30Y": ("30-year Treasury", "Rates", "%", "D"),
+    "SPREAD_10Y2Y": ("10y minus 2y spread", "Rates", "pp", "D"),
     "SP500": ("S&P 500", "Markets", "index", "D"),
-    "VIXCLS": ("VIX volatility", "Markets", "index", "D"),
-    "DCOILWTICO": ("WTI crude oil", "Markets", "$/bbl", "D"),
-    "DEXUSEU": ("US$ per euro", "Markets", "$", "D"),
-    "CPIAUCSL": ("CPI index", "Economy", "index", "M"),
+    "VIX": ("VIX volatility", "Markets", "index", "D"),
+    "WTI": ("WTI crude oil (front month)", "Markets", "$/bbl", "D"),
+    "EURUSD": ("US$ per euro", "Markets", "$", "D"),
+    "CPI_YOY": ("CPI inflation (YoY)", "Economy", "%", "M"),
     "UNRATE": ("Unemployment rate", "Economy", "%", "M"),
 }
-CURVE = {"DGS1MO": 1 / 12, "DGS3MO": 0.25, "DGS6MO": 0.5, "DGS1": 1, "DGS2": 2, "DGS3": 3,
-         "DGS5": 5, "DGS7": 7, "DGS10": 10, "DGS20": 20, "DGS30": 30}
-DAILY_START, MONTHLY_START = "2019-01-01", "2015-01-01"
 
 
-def fetch(series_id, tries=3):
-    """FRED API when FRED_API_KEY is set (most reliable from cloud runners), else the public CSV download."""
-    key = os.environ.get("FRED_API_KEY")
+def get(url, data=None, tries=3, timeout=40):
     for attempt in range(tries):
         try:
-            if key:
-                body = urlopen(Request(API.format(series_id, key), headers={"User-Agent": UA}), timeout=40).read()
-                obs = json.loads(body)["observations"]
-                df = pd.DataFrame(obs)[["date", "value"]]
-            else:
-                req = Request(URL.format(series_id), headers={"User-Agent": UA, "Accept": "text/csv,*/*"})
-                df = pd.read_csv(io.StringIO(urlopen(req, timeout=40).read().decode()))
-                df.columns = ["date", "value"]
-            df["date"] = pd.to_datetime(df["date"])
-            df["value"] = pd.to_numeric(df["value"], errors="coerce")  # FRED marks gaps as "." or blank
-            return df.dropna()
-        except Exception as e:  # network hiccup: back off and retry
-            print(f"{series_id}: attempt {attempt + 1} failed: {e}", file=sys.stderr)
-            time.sleep(5 * (attempt + 1))
-    print(f"{series_id}: giving up for this run", file=sys.stderr)
-    return None
+            headers = dict(UA, **({"Content-Type": "application/json"} if data else {}))
+            return urlopen(Request(url, data=data, headers=headers), timeout=timeout).read()
+        except Exception as e:
+            print(f"  attempt {attempt + 1} failed for {url[:90]}: {e}", file=sys.stderr)
+            time.sleep(4 * (attempt + 1))
+    raise RuntimeError(f"giving up on {url[:90]}")
 
 
-def change_at(s, latest_date, days):
-    """Value change versus the last observation on or before latest_date - days."""
-    prior = s[s.index <= latest_date - pd.Timedelta(days=days)]
-    return s.iloc[-1] - prior.iloc[-1] if len(prior) else None
+def treasury():
+    frames = []
+    for year in range(START_YEAR - 1, TODAY.year + 1):  # one extra year so the 1-year-ago curve exists
+        frames.append(pd.read_csv(io.BytesIO(get(TREASURY.format(year=year)))))
+    df = pd.concat(frames)
+    df["Date"] = pd.to_datetime(df["Date"])
+    return df.sort_values("Date")
+
+
+def nyfed():
+    url = NYFED.format(start=f"{START_YEAR}-01-01", end=TODAY.isoformat())
+    rows = json.loads(get(url))["refRates"]
+    df = pd.DataFrame(rows)[["effectiveDate", "percentRate"]]
+    return pd.DataFrame({"date": pd.to_datetime(df["effectiveDate"]), "value": df["percentRate"].astype(float)})
+
+
+def bls():
+    out = {}
+    for start, end in ((TODAY.year - 10, TODAY.year - 1), (TODAY.year - 1, TODAY.year)):  # v1 allows 10 years a call
+        body = json.dumps({"seriesid": ["CUUR0000SA0", "LNS14000000"], "startyear": str(start), "endyear": str(end)})
+        res = json.loads(get(BLS, data=body.encode()))
+        if res.get("status") != "REQUEST_SUCCEEDED":
+            raise RuntimeError(f"BLS: {res.get('message')}")
+        for s in res["Results"]["series"]:
+            for d in s["data"]:
+                if d["period"].startswith("M") and d["period"] != "M13" and d["value"] not in ("-", ""):
+                    key = (s["seriesID"], pd.Timestamp(int(d["year"]), int(d["period"][1:]), 1))
+                    out[key] = float(d["value"])
+    df = pd.DataFrame([(k[0], k[1], v) for k, v in out.items()], columns=["sid", "date", "value"]).sort_values("date")
+    cpi = df[df["sid"] == "CUUR0000SA0"].set_index("date")["value"]
+    cpi_yoy = ((cpi / cpi.shift(12) - 1) * 100).dropna()
+    unrate = df[df["sid"] == "LNS14000000"].set_index("date")["value"]
+    return cpi_yoy, unrate
+
+
+def yahoo(symbol):
+    p1 = int(datetime(START_YEAR - 1, 1, 1, tzinfo=timezone.utc).timestamp())
+    p2 = int(datetime.now(timezone.utc).timestamp())
+    res = json.loads(get(YAHOO.format(sym=symbol.replace("^", "%5E").replace("=", "%3D"), p1=p1, p2=p2)))["chart"]["result"][0]
+    s = pd.Series(res["indicators"]["quote"][0]["close"], index=pd.to_datetime(res["timestamp"], unit="s").normalize())
+    return s.dropna().groupby(level=0).last()
+
+
+def change_at(s, last, days):
+    prior = s[s.index <= last - pd.Timedelta(days=days)]
+    return round(s.iloc[-1] - prior.iloc[-1], 4) if len(prior) else None
 
 
 def main():
     OUT.mkdir(exist_ok=True)
+    series, failed = {}, []
+
+    def attempt(name, fn):
+        print(f"fetching {name}")
+        try:
+            return fn()
+        except Exception as e:
+            print(f"{name} FAILED: {e}", file=sys.stderr)
+            failed.append(name)
+            return None
+
+    ust = attempt("Treasury yield curve", treasury)
+    if ust is not None:
+        ix = ust.set_index("Date")
+        for col, sid in (("3 Mo", "UST3M"), ("2 Yr", "UST2Y"), ("10 Yr", "UST10Y"), ("30 Yr", "UST30Y")):
+            series[sid] = ix[col].dropna()
+        series["SPREAD_10Y2Y"] = (ix["10 Yr"] - ix["2 Yr"]).dropna()
+
+    ff = attempt("Fed funds (NY Fed)", nyfed)
+    if ff is not None:
+        series["FEDFUNDS"] = ff.set_index("date")["value"].sort_index()
+
+    b = attempt("CPI and unemployment (BLS)", bls)
+    if b is not None:
+        series["CPI_YOY"], series["UNRATE"] = b
+
+    for sid, sym in (("SP500", "^GSPC"), ("VIX", "^VIX"), ("WTI", "CL=F"), ("EURUSD", "EURUSD=X")):
+        s = attempt(f"{sid} (Yahoo)", lambda sym=sym: yahoo(sym))
+        if s is not None:
+            series[sid] = s
+
+    if len(series) < 6:
+        raise SystemExit(f"only {len(series)} series fetched ({failed} failed); keeping the previous data")
+
     frames, kpis = [], []
-    raw = {}
-    for sid in sorted(set(SERIES) | set(CURVE)):
-        df = fetch(sid)
-        if df is not None:
-            raw[sid] = df
-    missing = sorted((set(SERIES) | set(CURVE)) - set(raw))
-    if len(missing) > 6:
-        raise SystemExit(f"too many series failed ({missing}); keeping the previous data")
-
-    for sid, (name, cat, unit, freq) in SERIES.items():
-        if sid not in raw:
-            continue
-        df = raw[sid].copy()
-        if sid == "CPIAUCSL":  # report inflation as year-over-year %
-            df["value"] = (df["value"] / df["value"].shift(12) - 1) * 100
-            name, unit, sid_out = "CPI inflation (YoY)", "%", "CPI_YOY"
-            df = df.dropna()
-        else:
-            sid_out = sid
-        start = MONTHLY_START if freq == "M" else DAILY_START
-        df = df[df["date"] >= start]
-        df = df.assign(series_id=sid_out, series=name, category=cat, unit=unit, frequency=freq)
-        frames.append(df)
-
-        s = df.set_index("date")["value"]
+    for sid, s in series.items():
+        name, cat, unit, freq = META[sid]
+        s = s[s.index >= (f"{START_YEAR}-01-01" if freq == "D" else f"{TODAY.year - 9}-01-01")].round(4)
+        frames.append(pd.DataFrame({"date": s.index, "series_id": sid, "series": name, "category": cat,
+                                    "unit": unit, "frequency": freq, "value": s.values}))
         last = s.index[-1]
-        kpis.append({
-            "series_id": sid_out, "series": name, "category": cat, "unit": unit,
-            "as_of": last.date().isoformat(), "value": round(s.iloc[-1], 4),
-            "chg_1d": None if freq != "D" else round(s.iloc[-1] - s.iloc[-2], 4),
-            "chg_1m": change_at(s, last, 30), "chg_1y": change_at(s, last, 365),
-        })
+        kpis.append({"series_id": sid, "series": name, "category": cat, "unit": unit,
+                     "as_of": last.date().isoformat(), "value": s.iloc[-1],
+                     "chg_1d": round(s.iloc[-1] - s.iloc[-2], 4) if freq == "D" else None,
+                     "chg_1m": change_at(s, last, 30), "chg_1y": change_at(s, last, 365)})
 
-    long = pd.concat(frames)[["date", "series_id", "series", "category", "unit", "frequency", "value"]]
-    long["value"] = long["value"].round(4)
-    long.sort_values(["series_id", "date"]).to_csv(OUT / "series_long.csv", index=False, date_format="%Y-%m-%d")
+    long = pd.concat(frames).sort_values(["series_id", "date"])
+    long.to_csv(OUT / "series_long.csv", index=False, date_format="%Y-%m-%d")
+    pd.DataFrame(kpis).to_csv(OUT / "kpis.csv", index=False)
 
-    k = pd.DataFrame(kpis)
-    for c in ("chg_1m", "chg_1y"):
-        k[c] = pd.to_numeric(k[c]).round(4)
-    k.to_csv(OUT / "kpis.csv", index=False)
-
-    curve_rows = []
-    tenors = {k: v for k, v in CURVE.items() if k in raw}
-    latest = min(raw[s]["date"].max() for s in tenors)
-    for label, days in (("Today", 0), ("1 month ago", 30), ("1 year ago", 365)):
-        when = latest - pd.Timedelta(days=days)
-        for sid, years in tenors.items():
-            d = raw[sid][raw[sid]["date"] <= when].iloc[-1]
-            curve_rows.append({"snapshot": label, "as_of": d["date"].date().isoformat(), "tenor": sid.replace("DGS", ""),
-                               "years": round(years, 4), "yield": d["value"]})
-    pd.DataFrame(curve_rows).to_csv(OUT / "yield_curve.csv", index=False)
+    latest_market = max(s.index[-1] for k, s in series.items() if META[k][3] == "D")
+    if ust is not None:
+        ix = ust.set_index("Date")
+        rows = []
+        for label, days in (("Today", 0), ("1 month ago", 30), ("1 year ago", 365)):
+            row = ix[ix.index <= ix.index[-1] - pd.Timedelta(days=days)].iloc[-1]
+            for col, (tenor, years) in TENORS.items():
+                if col in row and pd.notna(row[col]):
+                    rows.append({"snapshot": label, "as_of": row.name.date().isoformat(), "tenor": tenor,
+                                 "years": round(years, 4), "yield": row[col]})
+        pd.DataFrame(rows).to_csv(OUT / "yield_curve.csv", index=False)
 
     pd.DataFrame([{"refreshed_utc": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M"),
-                   "latest_market_date": latest.date().isoformat(), "rows": len(long), "missing_series": " ".join(missing)}]).to_csv(OUT / "refreshed.csv", index=False)
-    print(f"wrote {len(long):,} rows; latest market date {latest.date()}")
+                   "latest_market_date": latest_market.date().isoformat(), "rows": len(long),
+                   "failed_sources": "; ".join(failed)}]).to_csv(OUT / "refreshed.csv", index=False)
+    print(f"wrote {len(long):,} rows across {len(series)} series; latest market date {latest_market.date()}")
 
 
 if __name__ == "__main__":
