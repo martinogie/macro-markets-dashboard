@@ -46,8 +46,8 @@ Treasury, NY Fed, BLS, Cboe, EIA, ECB ──► GitHub Actions, 8:15am & 6:15pm 
 `web/live.html` is a web dashboard that rechecks market quotes every 2 minutes while it is open.
 The Google Sheet has a `live` tab of `GOOGLEFINANCE` quotes (S&P 500, Dow, Nasdaq, VIX, 10-year and
 13-week Treasury yields, EUR/USD, USD/JPY, Bitcoin, gold and oil ETFs; delayed up to 20 minutes) and a
-`history` tab that trims the daily data for charts. The page reads both through the Google Sheets
-connection in Claude, so it shows data only to someone with access to the sheet.
+`history` tab that trims the daily data for charts. The page reads both through a Google Sheets
+connection, so it shows data only to someone with access to the sheet.
 
 ## Run the pipeline yourself
 
@@ -62,4 +62,4 @@ needs no API keys, and can be started by hand from the Actions tab (**Run workfl
 ## Data note
 
 Sources: U.S. Department of the Treasury, Federal Reserve Bank of New York, U.S. Bureau of Labor Statistics, Cboe Global
-Markets, U.S. Energy Information Administration and the European Central Bank. Built with AI-assisted coding (Claude); the series choice, design and review are my own.
+Markets, U.S. Energy Information Administration and the European Central Bank. Built with AI-assisted coding; the series choice, design and review are my own.
