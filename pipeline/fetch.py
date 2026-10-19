@@ -10,6 +10,8 @@ Outputs in data/:
   refreshed.csv     timestamp of the last successful run
 """
 import io
+import json
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -19,7 +21,10 @@ from urllib.request import Request, urlopen
 import pandas as pd
 
 OUT = Path(__file__).resolve().parent.parent / "data"
-URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={}"
+URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={}&cosd=2014-01-01"
+API = "https://api.stlouisfed.org/fred/series/observations?series_id={}&api_key={}&file_type=json&observation_start=2014-01-01"
+UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+      "Chrome/126.0 Safari/537.36")
 
 # id: (name, category, unit, frequency)
 SERIES = {
@@ -42,20 +47,27 @@ CURVE = {"DGS1MO": 1 / 12, "DGS3MO": 0.25, "DGS6MO": 0.5, "DGS1": 1, "DGS2": 2, 
 DAILY_START, MONTHLY_START = "2019-01-01", "2015-01-01"
 
 
-def fetch(series_id, tries=4):
+def fetch(series_id, tries=3):
+    """FRED API when FRED_API_KEY is set (most reliable from cloud runners), else the public CSV download."""
+    key = os.environ.get("FRED_API_KEY")
     for attempt in range(tries):
         try:
-            req = Request(URL.format(series_id), headers={"User-Agent": "macro-markets-dashboard"})
-            text = urlopen(req, timeout=60).read().decode()
-            df = pd.read_csv(io.StringIO(text))
-            df.columns = ["date", "value"]
+            if key:
+                body = urlopen(Request(API.format(series_id, key), headers={"User-Agent": UA}), timeout=40).read()
+                obs = json.loads(body)["observations"]
+                df = pd.DataFrame(obs)[["date", "value"]]
+            else:
+                req = Request(URL.format(series_id), headers={"User-Agent": UA, "Accept": "text/csv,*/*"})
+                df = pd.read_csv(io.StringIO(urlopen(req, timeout=40).read().decode()))
+                df.columns = ["date", "value"]
             df["date"] = pd.to_datetime(df["date"])
             df["value"] = pd.to_numeric(df["value"], errors="coerce")  # FRED marks gaps as "." or blank
             return df.dropna()
         except Exception as e:  # network hiccup: back off and retry
             print(f"{series_id}: attempt {attempt + 1} failed: {e}", file=sys.stderr)
             time.sleep(5 * (attempt + 1))
-    raise RuntimeError(f"could not fetch {series_id}")
+    print(f"{series_id}: giving up for this run", file=sys.stderr)
+    return None
 
 
 def change_at(s, latest_date, days):
@@ -69,9 +81,16 @@ def main():
     frames, kpis = [], []
     raw = {}
     for sid in sorted(set(SERIES) | set(CURVE)):
-        raw[sid] = fetch(sid)
+        df = fetch(sid)
+        if df is not None:
+            raw[sid] = df
+    missing = sorted((set(SERIES) | set(CURVE)) - set(raw))
+    if len(missing) > 6:
+        raise SystemExit(f"too many series failed ({missing}); keeping the previous data")
 
     for sid, (name, cat, unit, freq) in SERIES.items():
+        if sid not in raw:
+            continue
         df = raw[sid].copy()
         if sid == "CPIAUCSL":  # report inflation as year-over-year %
             df["value"] = (df["value"] / df["value"].shift(12) - 1) * 100
@@ -103,17 +122,18 @@ def main():
     k.to_csv(OUT / "kpis.csv", index=False)
 
     curve_rows = []
-    latest = min(raw[s]["date"].max() for s in CURVE)
+    tenors = {k: v for k, v in CURVE.items() if k in raw}
+    latest = min(raw[s]["date"].max() for s in tenors)
     for label, days in (("Today", 0), ("1 month ago", 30), ("1 year ago", 365)):
         when = latest - pd.Timedelta(days=days)
-        for sid, years in CURVE.items():
+        for sid, years in tenors.items():
             d = raw[sid][raw[sid]["date"] <= when].iloc[-1]
             curve_rows.append({"snapshot": label, "as_of": d["date"].date().isoformat(), "tenor": sid.replace("DGS", ""),
                                "years": round(years, 4), "yield": d["value"]})
     pd.DataFrame(curve_rows).to_csv(OUT / "yield_curve.csv", index=False)
 
     pd.DataFrame([{"refreshed_utc": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M"),
-                   "latest_market_date": latest.date().isoformat(), "rows": len(long)}]).to_csv(OUT / "refreshed.csv", index=False)
+                   "latest_market_date": latest.date().isoformat(), "rows": len(long), "missing_series": " ".join(missing)}]).to_csv(OUT / "refreshed.csv", index=False)
     print(f"wrote {len(long):,} rows; latest market date {latest.date()}")
 
 
