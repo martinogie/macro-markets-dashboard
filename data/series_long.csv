@@ -2113,6 +2113,7 @@ date,series_id,series,category,unit,frequency,value
 2026-10-16,EURUSD,US$ per euro,Markets,$,D,1.1253
 2026-10-19,EURUSD,US$ per euro,Markets,$,D,1.1225
 2026-10-20,EURUSD,US$ per euro,Markets,$,D,1.1215
+2026-10-21,EURUSD,US$ per euro,Markets,$,D,1.1234
 2019-01-02,FEDFUNDS,Fed funds rate (effective),Rates,%,D,2.4
 2019-01-03,FEDFUNDS,Fed funds rate (effective),Rates,%,D,2.4
 2019-01-04,FEDFUNDS,Fed funds rate (effective),Rates,%,D,2.4
@@ -4071,6 +4072,7 @@ date,series_id,series,category,unit,frequency,value
 2026-10-15,FEDFUNDS,Fed funds rate (effective),Rates,%,D,3.88
 2026-10-16,FEDFUNDS,Fed funds rate (effective),Rates,%,D,3.88
 2026-10-19,FEDFUNDS,Fed funds rate (effective),Rates,%,D,3.88
+2026-10-20,FEDFUNDS,Fed funds rate (effective),Rates,%,D,3.88
 2019-01-02,SP500,S&P 500,Markets,index,D,2510.03
 2019-01-03,SP500,S&P 500,Markets,index,D,2447.8899
 2019-01-04,SP500,S&P 500,Markets,index,D,2531.9399
@@ -17896,6 +17898,7 @@ date,series_id,series,category,unit,frequency,value
 2026-10-15,VIX,VIX volatility,Markets,index,D,16.46
 2026-10-16,VIX,VIX volatility,Markets,index,D,19.99
 2026-10-19,VIX,VIX volatility,Markets,index,D,18.44
+2026-10-20,VIX,VIX volatility,Markets,index,D,17.31
 2019-01-02,WTI,WTI crude oil (spot),Markets,$/bbl,D,46.31
 2019-01-03,WTI,WTI crude oil (spot),Markets,$/bbl,D,46.92
 2019-01-04,WTI,WTI crude oil (spot),Markets,$/bbl,D,47.76
@@ -19840,6 +19843,10 @@ date,series_id,series,category,unit,frequency,value
 2026-10-07,WTI,WTI crude oil (spot),Markets,$/bbl,D,95.02
 2026-10-08,WTI,WTI crude oil (spot),Markets,$/bbl,D,98.26
 2026-10-09,WTI,WTI crude oil (spot),Markets,$/bbl,D,98.73
-2026-10-12,WTI,WTI crude oil (spot),Markets,$/bbl,D,98.73
-2026-10-13,WTI,WTI crude oil (spot),Markets,$/bbl,D,100.86
-2026-10-14,WTI,WTI crude oil (spot),Markets,$/bbl,D,101.91
+2026-10-12,WTI,WTI crude oil (spot),Markets,$/bbl,D,94.99
+2026-10-13,WTI,WTI crude oil (spot),Markets,$/bbl,D,95.39
+2026-10-14,WTI,WTI crude oil (spot),Markets,$/bbl,D,96.34
+2026-10-15,WTI,WTI crude oil (spot),Markets,$/bbl,D,104.71
+2026-10-16,WTI,WTI crude oil (spot),Markets,$/bbl,D,108.21
+2026-10-19,WTI,WTI crude oil (spot),Markets,$/bbl,D,110.01
+2026-10-20,WTI,WTI crude oil (spot),Markets,$/bbl,D,107.89
