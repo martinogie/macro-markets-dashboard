@@ -7985,6 +7985,7 @@ date,series_id,series,category,unit,frequency,value
 2026-10-16,SPREAD_10Y2Y,10y minus 2y spread,Rates,pp,D,0.35
 2026-10-19,SPREAD_10Y2Y,10y minus 2y spread,Rates,pp,D,0.38
 2026-10-20,SPREAD_10Y2Y,10y minus 2y spread,Rates,pp,D,0.33
+2026-10-21,SPREAD_10Y2Y,10y minus 2y spread,Rates,pp,D,0.32
 2017-01-01,UNRATE,Unemployment rate,Economy,%,M,4.7
 2017-02-01,UNRATE,Unemployment rate,Economy,%,M,4.6
 2017-03-01,UNRATE,Unemployment rate,Economy,%,M,4.4
@@ -10052,6 +10053,7 @@ date,series_id,series,category,unit,frequency,value
 2026-10-16,UST10Y,10-year Treasury,Rates,%,D,5.09
 2026-10-19,UST10Y,10-year Treasury,Rates,%,D,5.15
 2026-10-20,UST10Y,10-year Treasury,Rates,%,D,5.12
+2026-10-21,UST10Y,10-year Treasury,Rates,%,D,5.13
 2019-01-02,UST2Y,2-year Treasury,Rates,%,D,2.5
 2019-01-03,UST2Y,2-year Treasury,Rates,%,D,2.39
 2019-01-04,UST2Y,2-year Treasury,Rates,%,D,2.5
@@ -12003,6 +12005,7 @@ date,series_id,series,category,unit,frequency,value
 2026-10-16,UST2Y,2-year Treasury,Rates,%,D,4.74
 2026-10-19,UST2Y,2-year Treasury,Rates,%,D,4.77
 2026-10-20,UST2Y,2-year Treasury,Rates,%,D,4.79
+2026-10-21,UST2Y,2-year Treasury,Rates,%,D,4.81
 2019-01-02,UST30Y,30-year Treasury,Rates,%,D,2.97
 2019-01-03,UST30Y,30-year Treasury,Rates,%,D,2.92
 2019-01-04,UST30Y,30-year Treasury,Rates,%,D,2.98
@@ -13954,6 +13957,7 @@ date,series_id,series,category,unit,frequency,value
 2026-10-16,UST30Y,30-year Treasury,Rates,%,D,5.43
 2026-10-19,UST30Y,30-year Treasury,Rates,%,D,5.48
 2026-10-20,UST30Y,30-year Treasury,Rates,%,D,5.42
+2026-10-21,UST30Y,30-year Treasury,Rates,%,D,5.42
 2019-01-02,UST3M,3-month Treasury,Rates,%,D,2.42
 2019-01-03,UST3M,3-month Treasury,Rates,%,D,2.41
 2019-01-04,UST3M,3-month Treasury,Rates,%,D,2.42
@@ -15905,6 +15909,7 @@ date,series_id,series,category,unit,frequency,value
 2026-10-16,UST3M,3-month Treasury,Rates,%,D,4.26
 2026-10-19,UST3M,3-month Treasury,Rates,%,D,4.27
 2026-10-20,UST3M,3-month Treasury,Rates,%,D,4.26
+2026-10-21,UST3M,3-month Treasury,Rates,%,D,4.25
 2019-01-02,VIX,VIX volatility,Markets,index,D,23.22
 2019-01-03,VIX,VIX volatility,Markets,index,D,25.45
 2019-01-04,VIX,VIX volatility,Markets,index,D,21.38
@@ -17899,6 +17904,7 @@ date,series_id,series,category,unit,frequency,value
 2026-10-16,VIX,VIX volatility,Markets,index,D,19.99
 2026-10-19,VIX,VIX volatility,Markets,index,D,18.44
 2026-10-20,VIX,VIX volatility,Markets,index,D,17.31
+2026-10-21,VIX,VIX volatility,Markets,index,D,16.68
 2019-01-02,WTI,WTI crude oil (spot),Markets,$/bbl,D,46.31
 2019-01-03,WTI,WTI crude oil (spot),Markets,$/bbl,D,46.92
 2019-01-04,WTI,WTI crude oil (spot),Markets,$/bbl,D,47.76
