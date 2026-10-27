@@ -4,10 +4,10 @@ UST2Y,2-year Treasury,Rates,%,2026-10-26,4.68,-0.01,-0.13,1.2
 UST10Y,10-year Treasury,Rates,%,2026-10-26,5.0,0.0,-0.17,0.98
 UST30Y,30-year Treasury,Rates,%,2026-10-26,5.31,-0.02,-0.18,0.72
 SPREAD_10Y2Y,10y minus 2y spread,Rates,pp,2026-10-26,0.32,0.01,-0.04,-0.22
-FEDFUNDS,Fed funds rate (effective),Rates,%,2026-10-23,3.88,0.0,0.0,-0.23
+FEDFUNDS,Fed funds rate (effective),Rates,%,2026-10-26,3.88,0.0,0.0,-0.23
 CPI_YOY,CPI inflation (YoY),Economy,%,2026-09-01,4.0015,,0.3079,0.9888
 UNRATE,Unemployment rate,Economy,%,2026-09-01,4.2,,0.1,-0.2
 SP500,S&P 500,Markets,index,2026-10-26,7676.77,53.09,-66.64,885.08
 VIX,VIX volatility,Markets,index,2026-10-26,18.39,-1.06,3.52,2.02
 WTI,WTI crude oil (spot),Markets,$/bbl,2026-10-20,107.89,-2.12,6.45,49.55
-EURUSD,US$ per euro,Markets,$,2026-10-26,1.1188,-0.0005,-0.0215,-0.0424
+EURUSD,US$ per euro,Markets,$,2026-10-27,1.115,-0.0038,-0.0253,-0.049
