@@ -6058,6 +6058,7 @@ date,series_id,series,category,unit,frequency,value
 2026-10-28,SP500,S&P 500,Markets,index,D,7743.98
 2026-10-29,SP500,S&P 500,Markets,index,D,7720.39
 2026-10-30,SP500,S&P 500,Markets,index,D,7580.07
+2026-11-02,SP500,S&P 500,Markets,index,D,7541.4
 2019-01-02,SPREAD_10Y2Y,10y minus 2y spread,Rates,pp,D,0.16
 2019-01-03,SPREAD_10Y2Y,10y minus 2y spread,Rates,pp,D,0.17
 2019-01-04,SPREAD_10Y2Y,10y minus 2y spread,Rates,pp,D,0.17
@@ -17976,6 +17977,7 @@ date,series_id,series,category,unit,frequency,value
 2026-10-28,VIX,VIX volatility,Markets,index,D,16.91
 2026-10-29,VIX,VIX volatility,Markets,index,D,17.2
 2026-10-30,VIX,VIX volatility,Markets,index,D,19.42
+2026-11-02,VIX,VIX volatility,Markets,index,D,21.15
 2019-01-02,WTI,WTI crude oil (spot),Markets,$/bbl,D,46.31
 2019-01-03,WTI,WTI crude oil (spot),Markets,$/bbl,D,46.92
 2019-01-04,WTI,WTI crude oil (spot),Markets,$/bbl,D,47.76
