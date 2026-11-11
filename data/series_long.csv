@@ -2129,6 +2129,7 @@ date,series_id,series,category,unit,frequency,value
 2026-11-06,EURUSD,US$ per euro,Markets,$,D,1.1165
 2026-11-09,EURUSD,US$ per euro,Markets,$,D,1.1193
 2026-11-10,EURUSD,US$ per euro,Markets,$,D,1.1214
+2026-11-11,EURUSD,US$ per euro,Markets,$,D,1.1127
 2019-01-02,FEDFUNDS,Fed funds rate (effective),Rates,%,D,2.4
 2019-01-03,FEDFUNDS,Fed funds rate (effective),Rates,%,D,2.4
 2019-01-04,FEDFUNDS,Fed funds rate (effective),Rates,%,D,2.4
