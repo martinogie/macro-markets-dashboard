@@ -2131,6 +2131,7 @@ date,series_id,series,category,unit,frequency,value
 2026-11-10,EURUSD,US$ per euro,Markets,$,D,1.1214
 2026-11-11,EURUSD,US$ per euro,Markets,$,D,1.1127
 2026-11-12,EURUSD,US$ per euro,Markets,$,D,1.1081
+2026-11-13,EURUSD,US$ per euro,Markets,$,D,1.1052
 2019-01-02,FEDFUNDS,Fed funds rate (effective),Rates,%,D,2.4
 2019-01-03,FEDFUNDS,Fed funds rate (effective),Rates,%,D,2.4
 2019-01-04,FEDFUNDS,Fed funds rate (effective),Rates,%,D,2.4
@@ -4105,6 +4106,7 @@ date,series_id,series,category,unit,frequency,value
 2026-11-06,FEDFUNDS,Fed funds rate (effective),Rates,%,D,3.88
 2026-11-09,FEDFUNDS,Fed funds rate (effective),Rates,%,D,3.88
 2026-11-10,FEDFUNDS,Fed funds rate (effective),Rates,%,D,3.88
+2026-11-12,FEDFUNDS,Fed funds rate (effective),Rates,%,D,3.88
 2019-01-02,SP500,S&P 500,Markets,index,D,2510.03
 2019-01-03,SP500,S&P 500,Markets,index,D,2447.8899
 2019-01-04,SP500,S&P 500,Markets,index,D,2531.9399
