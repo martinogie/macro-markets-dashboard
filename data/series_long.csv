@@ -2134,6 +2134,7 @@ date,series_id,series,category,unit,frequency,value
 2026-11-13,EURUSD,US$ per euro,Markets,$,D,1.1052
 2026-11-16,EURUSD,US$ per euro,Markets,$,D,1.1014
 2026-11-17,EURUSD,US$ per euro,Markets,$,D,1.0989
+2026-11-18,EURUSD,US$ per euro,Markets,$,D,1.0968
 2019-01-02,FEDFUNDS,Fed funds rate (effective),Rates,%,D,2.4
 2019-01-03,FEDFUNDS,Fed funds rate (effective),Rates,%,D,2.4
 2019-01-04,FEDFUNDS,Fed funds rate (effective),Rates,%,D,2.4
@@ -4111,6 +4112,7 @@ date,series_id,series,category,unit,frequency,value
 2026-11-12,FEDFUNDS,Fed funds rate (effective),Rates,%,D,3.88
 2026-11-13,FEDFUNDS,Fed funds rate (effective),Rates,%,D,3.88
 2026-11-16,FEDFUNDS,Fed funds rate (effective),Rates,%,D,3.88
+2026-11-17,FEDFUNDS,Fed funds rate (effective),Rates,%,D,3.88
 2019-01-02,SP500,S&P 500,Markets,index,D,2510.03
 2019-01-03,SP500,S&P 500,Markets,index,D,2447.8899
 2019-01-04,SP500,S&P 500,Markets,index,D,2531.9399
@@ -8062,6 +8064,7 @@ date,series_id,series,category,unit,frequency,value
 2026-11-13,SPREAD_10Y2Y,10y minus 2y spread,Rates,pp,D,0.27
 2026-11-16,SPREAD_10Y2Y,10y minus 2y spread,Rates,pp,D,0.29
 2026-11-17,SPREAD_10Y2Y,10y minus 2y spread,Rates,pp,D,0.3
+2026-11-18,SPREAD_10Y2Y,10y minus 2y spread,Rates,pp,D,0.27
 2017-01-01,UNRATE,Unemployment rate,Economy,%,M,4.7
 2017-02-01,UNRATE,Unemployment rate,Economy,%,M,4.6
 2017-03-01,UNRATE,Unemployment rate,Economy,%,M,4.4
@@ -10149,6 +10152,7 @@ date,series_id,series,category,unit,frequency,value
 2026-11-13,UST10Y,10-year Treasury,Rates,%,D,5.15
 2026-11-16,UST10Y,10-year Treasury,Rates,%,D,5.12
 2026-11-17,UST10Y,10-year Treasury,Rates,%,D,5.1
+2026-11-18,UST10Y,10-year Treasury,Rates,%,D,5.07
 2019-01-02,UST2Y,2-year Treasury,Rates,%,D,2.5
 2019-01-03,UST2Y,2-year Treasury,Rates,%,D,2.39
 2019-01-04,UST2Y,2-year Treasury,Rates,%,D,2.5
@@ -12119,6 +12123,7 @@ date,series_id,series,category,unit,frequency,value
 2026-11-13,UST2Y,2-year Treasury,Rates,%,D,4.88
 2026-11-16,UST2Y,2-year Treasury,Rates,%,D,4.83
 2026-11-17,UST2Y,2-year Treasury,Rates,%,D,4.8
+2026-11-18,UST2Y,2-year Treasury,Rates,%,D,4.8
 2019-01-02,UST30Y,30-year Treasury,Rates,%,D,2.97
 2019-01-03,UST30Y,30-year Treasury,Rates,%,D,2.92
 2019-01-04,UST30Y,30-year Treasury,Rates,%,D,2.98
@@ -14089,6 +14094,7 @@ date,series_id,series,category,unit,frequency,value
 2026-11-13,UST30Y,30-year Treasury,Rates,%,D,5.47
 2026-11-16,UST30Y,30-year Treasury,Rates,%,D,5.46
 2026-11-17,UST30Y,30-year Treasury,Rates,%,D,5.46
+2026-11-18,UST30Y,30-year Treasury,Rates,%,D,5.41
 2019-01-02,UST3M,3-month Treasury,Rates,%,D,2.42
 2019-01-03,UST3M,3-month Treasury,Rates,%,D,2.41
 2019-01-04,UST3M,3-month Treasury,Rates,%,D,2.42
@@ -16059,6 +16065,7 @@ date,series_id,series,category,unit,frequency,value
 2026-11-13,UST3M,3-month Treasury,Rates,%,D,4.32
 2026-11-16,UST3M,3-month Treasury,Rates,%,D,4.34
 2026-11-17,UST3M,3-month Treasury,Rates,%,D,4.33
+2026-11-18,UST3M,3-month Treasury,Rates,%,D,4.34
 2019-01-02,VIX,VIX volatility,Markets,index,D,23.22
 2019-01-03,VIX,VIX volatility,Markets,index,D,25.45
 2019-01-04,VIX,VIX volatility,Markets,index,D,21.38
@@ -20040,3 +20047,7 @@ date,series_id,series,category,unit,frequency,value
 2026-11-09,WTI,WTI crude oil (spot),Markets,$/bbl,D,90.4
 2026-11-10,WTI,WTI crude oil (spot),Markets,$/bbl,D,89.62
 2026-11-11,WTI,WTI crude oil (spot),Markets,$/bbl,D,89.62
+2026-11-12,WTI,WTI crude oil (spot),Markets,$/bbl,D,92.3
+2026-11-13,WTI,WTI crude oil (spot),Markets,$/bbl,D,91.96
+2026-11-16,WTI,WTI crude oil (spot),Markets,$/bbl,D,89.24
+2026-11-17,WTI,WTI crude oil (spot),Markets,$/bbl,D,89.53
