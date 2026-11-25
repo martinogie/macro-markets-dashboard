@@ -1,13 +1,13 @@
 series_id,series,category,unit,as_of,value,chg_1d,chg_1m,chg_1y
-UST3M,3-month Treasury,Rates,%,2026-11-24,4.36,-0.01,0.14,0.45
-UST2Y,2-year Treasury,Rates,%,2026-11-24,4.63,0.0,-0.06,1.17
-UST10Y,10-year Treasury,Rates,%,2026-11-24,4.91,-0.01,-0.09,0.87
-UST30Y,30-year Treasury,Rates,%,2026-11-24,5.3,0.01,-0.03,0.62
-SPREAD_10Y2Y,10y minus 2y spread,Rates,pp,2026-11-24,0.28,-0.01,-0.03,-0.3
-FEDFUNDS,Fed funds rate (effective),Rates,%,2026-11-23,3.88,0.0,0.0,0.0
+UST3M,3-month Treasury,Rates,%,2026-11-25,4.34,-0.02,0.12,0.44
+UST2Y,2-year Treasury,Rates,%,2026-11-25,4.61,-0.02,-0.07,1.18
+UST10Y,10-year Treasury,Rates,%,2026-11-25,4.85,-0.06,-0.15,0.84
+UST30Y,30-year Treasury,Rates,%,2026-11-25,5.24,-0.06,-0.07,0.57
+SPREAD_10Y2Y,10y minus 2y spread,Rates,pp,2026-11-25,0.24,-0.04,-0.08,-0.34
+FEDFUNDS,Fed funds rate (effective),Rates,%,2026-11-24,3.88,0.0,0.0,0.0
 CPI_YOY,CPI inflation (YoY),Economy,%,2026-10-01,3.9135,,-0.088,0.9008
 UNRATE,Unemployment rate,Economy,%,2026-10-01,4.1,,-0.1,-0.3
 SP500,S&P 500,Markets,index,2026-11-24,7201.09,-36.08,-422.59,495.97
 VIX,VIX volatility,Markets,index,2026-11-24,26.36,-0.26,6.91,5.84
-WTI,WTI crude oil (spot),Markets,$/bbl,2026-11-17,89.53,0.29,-18.68,28.87
-EURUSD,US$ per euro,Markets,$,2026-11-24,1.0963,0.0024,-0.023,-0.0581
+WTI,WTI crude oil (spot),Markets,$/bbl,2026-11-24,82.24,0.82,-27.48,23.13
+EURUSD,US$ per euro,Markets,$,2026-11-25,1.0935,-0.0028,-0.0253,-0.0616
