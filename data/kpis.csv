@@ -7,7 +7,7 @@ SPREAD_10Y2Y,10y minus 2y spread,Rates,pp,2026-11-25,0.24,-0.04,-0.08,-0.34
 FEDFUNDS,Fed funds rate (effective),Rates,%,2026-11-24,3.88,0.0,0.0,0.0
 CPI_YOY,CPI inflation (YoY),Economy,%,2026-10-01,3.9135,,-0.088,0.9008
 UNRATE,Unemployment rate,Economy,%,2026-10-01,4.1,,-0.1,-0.3
-SP500,S&P 500,Markets,index,2026-11-24,7201.09,-36.08,-422.59,495.97
-VIX,VIX volatility,Markets,index,2026-11-24,26.36,-0.26,6.91,5.84
+SP500,S&P 500,Markets,index,2026-11-25,7182.78,-18.31,-493.99,416.9
+VIX,VIX volatility,Markets,index,2026-11-25,28.29,1.93,9.9,9.73
 WTI,WTI crude oil (spot),Markets,$/bbl,2026-11-24,82.24,0.82,-27.48,23.13
 EURUSD,US$ per euro,Markets,$,2026-11-25,1.0935,-0.0028,-0.0253,-0.0616
